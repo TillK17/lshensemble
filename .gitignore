@@ -6,6 +6,7 @@
 # Folders
 _obj
 _test
+_cod_domains
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -23,4 +24,4 @@ _testmain.go
 *.test
 *.prof
 
-_*
+
