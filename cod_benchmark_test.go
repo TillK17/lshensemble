@@ -49,8 +49,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 	// Select queries
 	numQuery := int(fracQuery * float64(len(rawDomains)))
 	queries := make([]rawDomain, 0, numQuery)
-	rand.Seed(int64(benchmarkSeed))
-	for _, i := range rand.Perm(len(rawDomains))[:numQuery] {
+	for i := 0; i < numQuery; i++ {
 		queries = append(queries, rawDomains[i])
 	}
 
