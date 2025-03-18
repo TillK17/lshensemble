@@ -60,9 +60,9 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 }
 
 func benchmarkCOD(rawDomains, queries []rawDomain, threshold float64) {
-	linearscanOutput := fmt.Sprintf("_cod_linearscan_threshold=%.2f", threshold)
-	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_threshold=%.2f", threshold)
-	accuracyOutput := fmt.Sprintf("_cod_accuracy_threshold=%.2f", threshold)
+	linearscanOutput := fmt.Sprintf("_cod_linearscan_threshold_%.2f", threshold)
+	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_threshold_%.2f", threshold)
+	accuracyOutput := fmt.Sprintf("_cod_accuracy_threshold_%.2f", threshold)
 	benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
 	benchmarkLshEnsemble(rawDomains, queries, threshold, lshensembleOutput)
 	benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
