@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +23,7 @@ const (
 
 var (
 	thresholds = []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
+	numHash    = []int{16, 32, 64, 128, 256}
 )
 
 // Running this function requires a `_cod_domains` directory
@@ -66,18 +68,21 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 	}
 	log.Printf("Selected %d queries", len(queries))
 	// Run benchmark
-	for _, threshold := range thresholds {
-		log.Printf("Canadian Open Data benchmark threshold = %.2f", threshold)
-		benchmarkCOD(rawDomains, queries, threshold)
+	for _, numH := range numHash {
+		for _, threshold := range thresholds {
+			log.Printf("Canadian Open Data benchmark with %d Hash permutations and threshold = %.2f", numH, threshold)
+			benchmarkCOD(rawDomains, queries, threshold, numH)
+			runtime.GC()
+		}
 	}
 }
 
-func benchmarkCOD(rawDomains, queries []rawDomain, threshold float64) {
-	linearscanOutput := fmt.Sprintf("_cod_linearscan_threshold_%.2f", threshold)
-	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_threshold_%.2f", threshold)
-	accuracyOutput := fmt.Sprintf("_cod_accuracy_threshold_%.2f.csv", threshold)
+func benchmarkCOD(rawDomains, queries []rawDomain, threshold float64, numHash int) {
+	linearscanOutput := fmt.Sprintf("_cod_linearscan_numHash_%d_threshold_%.2f", numHash, threshold)
+	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_numHash_%d_threshold_%.2f", numHash, threshold)
+	accuracyOutput := fmt.Sprintf("_cod_accuracy_numHash_%d_threshold_%.2f.csv", numHash, threshold)
 	benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
-	benchmarkLshEnsemble(rawDomains, queries, threshold, lshensembleOutput)
+	benchmarkLshEnsemble(rawDomains, queries, threshold, numHash, lshensembleOutput)
 	benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
 }
 

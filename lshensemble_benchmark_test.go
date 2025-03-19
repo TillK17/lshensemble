@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	numHash = 256
 	numPart = 32
 	maxK    = 4
 	// useOptimalPartitions = true
@@ -19,8 +18,7 @@ const (
 )
 
 func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
-	threshold float64, outputFilename string) {
-	numHash := 256
+	threshold float64, numHash int, outputFilename string) {
 	numPart := 32
 	maxK := 4
 
@@ -78,7 +76,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	queryIndexTime := time.Now().Unix() - start.Unix()
 	queryIndexSpace := readMemStats() - mem
 	// Output results
-	file, err := os.Create(fmt.Sprintf("performance_%f.csv", threshold))
+	file, err := os.Create(fmt.Sprintf(outputFilename+"performance_%f.csv", threshold))
 	if err != nil {
 		panic(err)
 	}
