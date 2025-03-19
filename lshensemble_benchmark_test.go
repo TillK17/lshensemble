@@ -28,7 +28,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	mem := readMemStats()
 	start := time.Now()
 	domainRecords := minhashDomains(rawDomains, numHash)
-	minHashDomainTime := time.Now().Sub(start).String()
+	minHashDomainTime := time.Now().Unix() - start.Unix()
 	minHashDomainSpace := readMemStats() - mem
 	log.Printf("Minhash %d domains in %s", len(domainRecords),
 		time.Now().Sub(start).String())
@@ -37,7 +37,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	mem = readMemStats()
 	start = time.Now()
 	queries := minhashDomains(rawQueries, numHash)
-	minHashQueryTime := time.Now().Sub(start).String()
+	minHashQueryTime := time.Now().Unix() - start.Unix()
 	minHashQuerySpace := readMemStats() - mem
 	log.Printf("Minhash %d query domains in %s", len(queries),
 		time.Now().Sub(start).String())
@@ -56,7 +56,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 		index, _ = BootstrapLshEnsemblePlusEquiDepth(numPart, numHash, maxK,
 			len(domainRecords), Recs2Chan(domainRecords))
 	}
-	buildIndexTime := time.Now().Sub(start).String()
+	buildIndexTime := time.Now().Unix() - start.Unix()
 	buildIndexSpace := readMemStats() - mem
 	log.Print("Finished building LSH Ensemble index")
 	// Querying
@@ -75,7 +75,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 		}
 		close(results)
 	}()
-	queryIndexTime := time.Now().Sub(start).String()
+	queryIndexTime := time.Now().Unix() - start.Unix()
 	queryIndexSpace := readMemStats() - mem
 	// Output results
 	file, err := os.Create(fmt.Sprintf("performance_%f.csv", threshold))
@@ -84,7 +84,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	}
 	out := csv.NewWriter(file)
 	out.Write([]string{"MinHashDomain", "MinHashQuery", "LSHBuild", "LSHQuery"})
-	out.Write([]string{minHashDomainTime, minHashQueryTime, buildIndexTime, queryIndexTime})
+	out.Write([]string{fmt.Sprintf("%d", minHashDomainTime), fmt.Sprintf("%d", minHashQueryTime), fmt.Sprintf("%d", buildIndexTime), fmt.Sprintf("%d", queryIndexTime)})
 	out.Write([]string{fmt.Sprintf("%d", minHashDomainSpace), fmt.Sprintf("%d", minHashQuerySpace), fmt.Sprintf("%d", buildIndexSpace), fmt.Sprintf("%d", queryIndexSpace)})
 	out.Flush()
 	file.Close()
@@ -111,5 +111,5 @@ func minhashDomains(rawDomains []rawDomain, numHash int) []*DomainRecord {
 func readMemStats() uint64 {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	return m.TotalAlloc / 1024 / 1024
+	return m.TotalAlloc
 }
