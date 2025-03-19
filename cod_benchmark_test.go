@@ -14,8 +14,10 @@ import (
 
 const (
 	benchmarkSeed = 42
-	fracQuery     = 0.01
+	numQueries    = 1000
 	minDomainSize = 10
+	minQuerySize  = 10
+	maxQuerySize  = 100
 )
 
 var (
@@ -46,12 +48,23 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		time.Now().Sub(start).String())
 
 	// Select queries
-	numQuery := int(fracQuery * float64(len(rawDomains)))
-	queries := make([]rawDomain, 0, numQuery)
-	for i := 0; i < numQuery; i++ {
-		queries = append(queries, rawDomains[i])
+	//numQuery := int(fracQuery * float64(len(rawDomains)))
+	queries := make([]rawDomain, 0, numQueries)
+	i := 0
+	for _, domain := range rawDomains {
+		if i >= numQueries {
+			break
+		}
+		if len(domain.values) >= minQuerySize && len(domain.values) <= maxQuerySize {
+			queries = append(queries, domain)
+			i++
+		}
 	}
-
+	if len(queries) < numQueries {
+		msg := fmt.Sprintf("Not enough queries, found %d", len(queries))
+		panic(msg)
+	}
+	log.Printf("Selected %d queries", len(queries))
 	// Run benchmark
 	for _, threshold := range thresholds {
 		log.Printf("Canadian Open Data benchmark threshold = %.2f", threshold)
@@ -62,7 +75,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 func benchmarkCOD(rawDomains, queries []rawDomain, threshold float64) {
 	linearscanOutput := fmt.Sprintf("_cod_linearscan_threshold_%.2f", threshold)
 	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_threshold_%.2f", threshold)
-	accuracyOutput := fmt.Sprintf("_cod_accuracy_threshold_%.2f", threshold)
+	accuracyOutput := fmt.Sprintf("_cod_accuracy_threshold_%.2f.csv", threshold)
 	benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
 	benchmarkLshEnsemble(rawDomains, queries, threshold, lshensembleOutput)
 	benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
