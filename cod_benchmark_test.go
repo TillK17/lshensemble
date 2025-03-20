@@ -102,7 +102,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			BuildIndexSpace = append(BuildIndexSpace, s[2])
 			QueryIndexTime = append(QueryIndexTime, t[3])
 			QueryIndexSpace = append(QueryIndexSpace, s[3])
-			runtime.GC()
+			//runtime.GC()
 			os.Remove(linearscanOutput)
 			os.Remove(lshensembleOutput)
 		}
