@@ -91,6 +91,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
 			t, s := benchmarkLshEnsemble(rawDomains, queries, threshold, numH, lshensembleOutput)
 			p, r, f := benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
+			log.Printf("Precision: %.4f, Recall: %.4f, F1: %.4f", p, r, f)
 			precision = append(precision, p)
 			recall = append(recall, r)
 			f1 = append(f1, f)
@@ -116,9 +117,9 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		out.Write([]string{"Precision", "Recall", "F1"})
 		for i := 0; i < len(thresholds); i++ {
 			line := []string{
-				strconv.FormatFloat(precision[i], 'f', -1, 64),
-				strconv.FormatFloat(recall[i], 'f', -1, 64),
-				strconv.FormatFloat(f1[i], 'f', -1, 64),
+				strconv.FormatFloat(precision[i], 'f', 4, 64),
+				strconv.FormatFloat(recall[i], 'f', 4, 64),
+				strconv.FormatFloat(f1[i], 'f', 4, 64),
 			}
 			out.Write(line)
 		}
@@ -134,17 +135,17 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		out = csv.NewWriter(file)
 		out.Write([]string{"MinHashDomain", "MinHashQuery", "LSHBuild", "LSHQuery"})
 		line := []string{
-			strconv.FormatFloat(mean(MinHashDomainTime), 'f', -1, 64),
-			strconv.FormatFloat(mean(MinHashQueryTime), 'f', -1, 64),
-			strconv.FormatFloat(mean(BuildIndexTime), 'f', -1, 64),
-			strconv.FormatFloat(mean(QueryIndexTime), 'f', -1, 64),
+			strconv.FormatFloat(mean(MinHashDomainTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(MinHashQueryTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(BuildIndexTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(QueryIndexTime), 'f', 4, 64),
 		}
 		out.Write(line)
 		line = []string{
-			strconv.FormatFloat(mean(MinHashDomainSpace), 'f', -1, 64),
-			strconv.FormatFloat(mean(MinHashQuerySpace), 'f', -1, 64),
-			strconv.FormatFloat(mean(BuildIndexSpace), 'f', -1, 64),
-			strconv.FormatFloat(mean(QueryIndexSpace), 'f', -1, 64),
+			strconv.FormatFloat(mean(MinHashDomainSpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(MinHashQuerySpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(BuildIndexSpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(QueryIndexSpace), 'f', 4, 64),
 		}
 		out.Write(line)
 		out.Flush()
