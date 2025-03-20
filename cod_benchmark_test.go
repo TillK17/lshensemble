@@ -17,7 +17,7 @@ import (
 
 const (
 	benchmarkSeed = 42
-	numQueries    = 100
+	numQueries    = 1000
 	minDomainSize = 10
 	minQuerySize  = 10
 	maxQuerySize  = 100
@@ -25,7 +25,7 @@ const (
 
 var (
 	thresholds = []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
-	numHash    = []int{16, 32, 64, 128, 256}
+	numHash    = []int{16, 32, 64, 128}
 )
 
 // Running this function requires a `_cod_domains` directory
