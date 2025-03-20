@@ -1,10 +1,7 @@
 package lshensemble
 
 import (
-	"encoding/csv"
-	"fmt"
 	"log"
-	"os"
 	"runtime"
 	"sort"
 	"time"
@@ -18,10 +15,9 @@ const (
 )
 
 func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
-	threshold float64, numHash int, outputFilename string) {
+	threshold float64, numHash int, outputFilename string) ([]float64, []float64) {
 	numPart := 32
 	maxK := 4
-
 	// Minhash domains
 	mem := readMemStats()
 	start := time.Now()
@@ -76,7 +72,7 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	queryIndexTime := time.Now().Unix() - start.Unix()
 	queryIndexSpace := readMemStats() - mem
 	// Output results
-	file, err := os.Create(fmt.Sprintf(outputFilename+"performance_%f.csv", threshold))
+	/*file, err := os.Create(fmt.Sprintf(outputFilename+"performance_%f.csv", threshold))
 	if err != nil {
 		panic(err)
 	}
@@ -85,9 +81,10 @@ func benchmarkLshEnsemble(rawDomains []rawDomain, rawQueries []rawDomain,
 	out.Write([]string{fmt.Sprintf("%d", minHashDomainTime), fmt.Sprintf("%d", minHashQueryTime), fmt.Sprintf("%d", buildIndexTime), fmt.Sprintf("%d", queryIndexTime)})
 	out.Write([]string{fmt.Sprintf("%d", minHashDomainSpace), fmt.Sprintf("%d", minHashQuerySpace), fmt.Sprintf("%d", buildIndexSpace), fmt.Sprintf("%d", queryIndexSpace)})
 	out.Flush()
-	file.Close()
+	file.Close()*/
 	outputQueryResults(results, outputFilename)
 	log.Printf("Finished querying LSH Ensemble index, output %s", outputFilename)
+	return []float64{float64(minHashDomainTime), float64(minHashQueryTime), float64(buildIndexTime), float64(queryIndexTime)}, []float64{float64(minHashDomainSpace), float64(minHashQuerySpace), float64(buildIndexSpace), float64(queryIndexSpace)}
 }
 
 func minhashDomains(rawDomains []rawDomain, numHash int) []*DomainRecord {

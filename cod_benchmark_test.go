@@ -2,12 +2,14 @@ package lshensemble
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -15,7 +17,7 @@ import (
 
 const (
 	benchmarkSeed = 42
-	numQueries    = 1000
+	numQueries    = 100
 	minDomainSize = 10
 	minQuerySize  = 10
 	maxQuerySize  = 100
@@ -69,21 +71,86 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 	log.Printf("Selected %d queries", len(queries))
 	// Run benchmark
 	for _, numH := range numHash {
+		precision := make([]float64, len(thresholds))
+		recall := make([]float64, len(thresholds))
+		f1 := make([]float64, len(thresholds))
+		MinHashDomainTime := make([]float64, len(thresholds))
+		MinHashDomainSpace := make([]float64, len(thresholds))
+		MinHashQueryTime := make([]float64, len(thresholds))
+		MinHashQuerySpace := make([]float64, len(thresholds))
+		BuildIndexTime := make([]float64, len(thresholds))
+		BuildIndexSpace := make([]float64, len(thresholds))
+		QueryIndexTime := make([]float64, len(thresholds))
+		QueryIndexSpace := make([]float64, len(thresholds))
+
 		for _, threshold := range thresholds {
 			log.Printf("Canadian Open Data benchmark with %d Hash permutations and threshold = %.2f", numH, threshold)
-			benchmarkCOD(rawDomains, queries, threshold, numH)
+			linearscanOutput := fmt.Sprintf("_cod_linearscan_numHash_%d_threshold_%.2f", numH, threshold)
+			lshensembleOutput := fmt.Sprintf("_cod_lshensemble_numHash_%d_threshold_%.2f", numH, threshold)
+			accuracyOutput := fmt.Sprintf("_cod_accuracy_numHash_%d_threshold_%.2f", numH, threshold)
+			benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
+			t, s := benchmarkLshEnsemble(rawDomains, queries, threshold, numH, lshensembleOutput)
+			p, r, f := benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
+			precision = append(precision, p)
+			recall = append(recall, r)
+			f1 = append(f1, f)
+			MinHashDomainTime = append(MinHashDomainTime, t[0])
+			MinHashDomainSpace = append(MinHashDomainSpace, s[0])
+			MinHashQueryTime = append(MinHashQueryTime, t[1])
+			MinHashQuerySpace = append(MinHashQuerySpace, s[1])
+			BuildIndexTime = append(BuildIndexTime, t[2])
+			BuildIndexSpace = append(BuildIndexSpace, s[2])
+			QueryIndexTime = append(QueryIndexTime, t[3])
+			QueryIndexSpace = append(QueryIndexSpace, s[3])
 			runtime.GC()
+			os.Remove(linearscanOutput)
+			os.Remove(lshensembleOutput)
 		}
-	}
-}
+		// Output results
+		accuracy_filename := fmt.Sprintf("_cod_accuracy_FNV_64_%d_small.csv", numH)
+		file, err := os.Create(accuracy_filename)
+		if err != nil {
+			panic(err)
+		}
+		out := csv.NewWriter(file)
+		out.Write([]string{"Precision", "Recall", "F1"})
+		for i := 0; i < len(thresholds); i++ {
+			line := []string{
+				strconv.FormatFloat(precision[i], 'f', -1, 64),
+				strconv.FormatFloat(recall[i], 'f', -1, 64),
+				strconv.FormatFloat(f1[i], 'f', -1, 64),
+			}
+			out.Write(line)
+		}
+		out.Flush()
+		file.Close()
+		log.Printf("Accuracy report output to %s", accuracy_filename)
 
-func benchmarkCOD(rawDomains, queries []rawDomain, threshold float64, numHash int) {
-	linearscanOutput := fmt.Sprintf("_cod_linearscan_numHash_%d_threshold_%.2f", numHash, threshold)
-	lshensembleOutput := fmt.Sprintf("_cod_lshensemble_numHash_%d_threshold_%.2f", numHash, threshold)
-	accuracyOutput := fmt.Sprintf("_cod_accuracy_numHash_%d_threshold_%.2f.csv", numHash, threshold)
-	benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
-	benchmarkLshEnsemble(rawDomains, queries, threshold, numHash, lshensembleOutput)
-	benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
+		performance_filename := fmt.Sprintf("_cod_performance_FNV_64_%d_small.csv", numH)
+		file, err = os.Create(performance_filename)
+		if err != nil {
+			panic(err)
+		}
+		out = csv.NewWriter(file)
+		out.Write([]string{"MinHashDomain", "MinHashQuery", "LSHBuild", "LSHQuery"})
+		line := []string{
+			strconv.FormatFloat(mean(MinHashDomainTime), 'f', -1, 64),
+			strconv.FormatFloat(mean(MinHashQueryTime), 'f', -1, 64),
+			strconv.FormatFloat(mean(BuildIndexTime), 'f', -1, 64),
+			strconv.FormatFloat(mean(QueryIndexTime), 'f', -1, 64),
+		}
+		out.Write(line)
+		line = []string{
+			strconv.FormatFloat(mean(MinHashDomainSpace), 'f', -1, 64),
+			strconv.FormatFloat(mean(MinHashQuerySpace), 'f', -1, 64),
+			strconv.FormatFloat(mean(BuildIndexSpace), 'f', -1, 64),
+			strconv.FormatFloat(mean(QueryIndexSpace), 'f', -1, 64),
+		}
+		out.Write(line)
+		out.Flush()
+		file.Close()
+		runtime.GC()
+	}
 }
 
 type rawDomain struct {
@@ -96,6 +163,14 @@ type byKey []*rawDomain
 func (ds byKey) Len() int           { return len(ds) }
 func (ds byKey) Swap(i, j int)      { ds[i], ds[j] = ds[j], ds[i] }
 func (ds byKey) Less(i, j int) bool { return ds[i].key < ds[j].key }
+
+func int64ToFloat64(arr []int64) []float64 {
+	result := make([]float64, len(arr))
+	for i, v := range arr {
+		result[i] = float64(v)
+	}
+	return result
+}
 
 func readDomains(dir string) chan rawDomain {
 	out := make(chan rawDomain)

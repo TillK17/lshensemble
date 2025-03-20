@@ -2,15 +2,13 @@ package lshensemble
 
 import (
 	"bufio"
-	"encoding/csv"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
 
-func benchmarkAccuracy(groundTruthFilename, queryResultFilename, outputFilename string) {
+func benchmarkAccuracy(groundTruthFilename, queryResultFilename, outputFilename string) (float64, float64, float64) {
 	groundTruths := readQueryResultFile(groundTruthFilename)
 	queryResults := readQueryResultFile(queryResultFilename)
 	precisions := make([]float64, 0)
@@ -25,21 +23,8 @@ func benchmarkAccuracy(groundTruthFilename, queryResultFilename, outputFilename 
 	log.Printf("Mean Precision = %.4f", mean(precisions))
 	log.Printf("Mean Recall = %.4f", mean(recalls))
 	log.Printf("Mean F1 = %.4f", mean(f1s))
-	f, e := os.Create("mean" + outputFilename)
-	if e != nil {
-		panic(e)
-	}
-	o := csv.NewWriter(f)
-	o.Write([]string{"Precision", "Recall", "F1"})
-	o.Write([]string{
-		strconv.FormatFloat(mean(precisions), 'f', -1, 64),
-		strconv.FormatFloat(mean(recalls), 'f', -1, 64),
-		strconv.FormatFloat(mean(f1s), 'f', -1, 64),
-	})
-	o.Flush()
-	f.Close()
 	// Output results
-	file, err := os.Create(outputFilename)
+	/*file, err := os.Create(outputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +41,8 @@ func benchmarkAccuracy(groundTruthFilename, queryResultFilename, outputFilename 
 	}
 	out.Flush()
 	file.Close()
-	log.Printf("Accuracy report output to %s", outputFilename)
+	log.Printf("Accuracy report output to %s", outputFilename)*/
+	return mean(precisions), mean(recalls), mean(f1s)
 }
 
 func recallPrecision(result, groundTruth queryResult) (recall, precision float64) {
