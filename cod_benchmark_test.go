@@ -91,7 +91,6 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
 			t, s := benchmarkLshEnsemble(rawDomains, queries, threshold, numH, lshensembleOutput)
 			p, r, f := benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
-			log.Printf("Precision: %.4f, Recall: %.4f, F1: %.4f", p, r, f)
 			precision = append(precision, p)
 			recall = append(recall, r)
 			f1 = append(f1, f)
@@ -116,11 +115,13 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		out := csv.NewWriter(file)
 		out.Write([]string{"Precision", "Recall", "F1"})
 		for i := 0; i < len(thresholds); i++ {
+			log.Printf("Precision: %.4f, Recall: %.4f, F1: %.4f", precision[i], recall[i], f1[i])
 			line := []string{
 				strconv.FormatFloat(precision[i], 'f', 4, 64),
 				strconv.FormatFloat(recall[i], 'f', 4, 64),
 				strconv.FormatFloat(f1[i], 'f', 4, 64),
 			}
+			log.Printf(line[0] + line[1] + line[2])
 			out.Write(line)
 		}
 		out.Flush()
