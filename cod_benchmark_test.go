@@ -17,7 +17,7 @@ import (
 
 const (
 	benchmarkSeed = 42
-	numQueries    = 100
+	numQueries    = 1000
 	minDomainSize = 10
 	minQuerySize  = 100
 	maxQuerySize  = 1000
@@ -71,17 +71,17 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 	log.Printf("Selected %d queries", len(queries))
 	// Run benchmark
 	for _, numH := range numHash {
-		precision := make([]float64, len(thresholds))
-		recall := make([]float64, len(thresholds))
-		f1 := make([]float64, len(thresholds))
-		MinHashDomainTime := make([]float64, len(thresholds))
-		MinHashDomainSpace := make([]float64, len(thresholds))
-		MinHashQueryTime := make([]float64, len(thresholds))
-		MinHashQuerySpace := make([]float64, len(thresholds))
-		BuildIndexTime := make([]float64, len(thresholds))
-		BuildIndexSpace := make([]float64, len(thresholds))
-		QueryIndexTime := make([]float64, len(thresholds))
-		QueryIndexSpace := make([]float64, len(thresholds))
+		precision := []float64{}
+		recall := []float64{}
+		f1 := []float64{}
+		MinHashDomainTime := []float64{}
+		MinHashDomainSpace := []float64{}
+		MinHashQueryTime := []float64{}
+		MinHashQuerySpace := []float64{}
+		BuildIndexTime := []float64{}
+		BuildIndexSpace := []float64{}
+		QueryIndexTime := []float64{}
+		QueryIndexSpace := []float64{}
 
 		for _, threshold := range thresholds {
 			log.Printf("Canadian Open Data benchmark with %d Hash permutations and threshold = %.2f", numH, threshold)
