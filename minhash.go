@@ -10,7 +10,7 @@ import (
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
-const HashValueSize = 8
+const HashValueSize = 4
 
 // Minhash represents a MinHash object
 type Minhash struct {
@@ -24,21 +24,21 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 	b := binary.BigEndian
 	b1 := make([]byte, HashValueSize)
 	b2 := make([]byte, HashValueSize)
-	b.PutUint64(b1, uint64(r.Int63()))
-	b.PutUint64(b2, uint64(r.Int63()))
-	fnv1 := fnv.New64a()
-	fnv2 := fnv.New64a()
+	b.PutUint32(b1, uint32(r.Int31()))
+	b.PutUint32(b2, uint32(r.Int31()))
+	fnv1 := fnv.New32a()
+	fnv2 := fnv.New32a()
 	h1 := func(b []byte) uint64 {
 		fnv1.Reset()
 		fnv1.Write(b1)
 		fnv1.Write(b)
-		return fnv1.Sum64()
+		return uint64(fnv1.Sum32())
 	}
 	h2 := func(b []byte) uint64 {
 		fnv2.Reset()
 		fnv2.Write(b2)
 		fnv2.Write(b)
-		return fnv2.Sum64()
+		return uint64(fnv2.Sum32())
 	}
 	return &Minhash{minwise.NewMinWise(h1, h2, numHash)}
 }
