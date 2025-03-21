@@ -25,9 +25,9 @@ func Test_HashKeyFunc16(t *testing.T) {
 
 func Test_HashKeyFunc64(t *testing.T) {
 	sig := randomSignature(2, 1)
-	f := hashKeyFuncGen(8)
+	f := hashKeyFuncGen(4)
 	hashKey := f(sig)
-	if len(hashKey) != 8*2 {
+	if len(hashKey) != 4*2 {
 		t.Fatal(len(hashKey))
 	}
 }
