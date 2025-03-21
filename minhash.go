@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"math/rand"
-
-	minwise "github.com/dgryski/go-minhash"
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
@@ -14,7 +12,7 @@ const HashValueSize = 8
 
 // Minhash represents a MinHash object
 type Minhash struct {
-	mw *minwise.MinWise
+	mw *MinWise
 }
 
 // NewMinhash initializes a MinHash object with a seed and the number of
@@ -40,7 +38,7 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 		fnv2.Write(b)
 		return fnv2.Sum64()
 	}
-	return &Minhash{minwise.NewMinWise(h1, h2, numHash)}
+	return &Minhash{NewMinWise(h1, h2, numHash)}
 }
 
 // Push a new value to the MinHash object.
