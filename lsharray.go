@@ -30,7 +30,7 @@ func NewLshForestArray(maxK, numHash, initSize int) *LshForestArray {
 
 // Add a key with MinHash signature into the index.
 // The key won't be searchable until Index() is called.
-func (a *LshForestArray) Add(key interface{}, sig []uint64) {
+func (a *LshForestArray) Add(key interface{}, sig []uint32) {
 	for i := range a.array {
 		a.array[i].Add(key, sig)
 	}
@@ -44,7 +44,7 @@ func (a *LshForestArray) Index() {
 }
 
 // Query returns candidate keys given the query signature and parameters.
-func (a *LshForestArray) Query(sig []uint64, K, L int, out chan<- interface{}, done <-chan struct{}) {
+func (a *LshForestArray) Query(sig []uint32, K, L int, out chan<- interface{}, done <-chan struct{}) {
 	a.array[K-1].Query(sig, -1, L, out, done)
 }
 

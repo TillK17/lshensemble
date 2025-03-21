@@ -24,14 +24,14 @@ type Partition struct {
 type Lsh interface {
 	// Add addes a new key into the index, it won't be searchable
 	// until the next time Index() is called since the add.
-	Add(key interface{}, sig []uint64)
+	Add(key interface{}, sig []uint32)
 	// Index makes all keys added so far searchable.
 	Index()
 	// Query searches the index given a minhash signature, and
 	// the LSH parameters k and l. Result keys will be written to
 	// the channel out.
 	// Closing channel done will cancels the query execution.
-	Query(sig []uint64, k, l int, out chan<- interface{}, done <-chan struct{})
+	Query(sig []uint32, k, l int, out chan<- interface{}, done <-chan struct{})
 	// OptimalKL computes the optimal LSH parameters k and l given
 	// x, the index domain size, q, the query domain size, and t,
 	// the containment threshold. The resulting false positive (fp)
@@ -86,14 +86,14 @@ func NewLshEnsemblePlus(parts []Partition, numHash, maxK, initSize int) *LshEnse
 
 // Add a new domain to the index given its partition ID - the index of the partition.
 // The added domain won't be searchable until the Index() function is called.
-func (e *LshEnsemble) Add(key interface{}, sig []uint64, partInd int) {
+func (e *LshEnsemble) Add(key interface{}, sig []uint32, partInd int) {
 	e.lshes[partInd].Add(key, sig)
 }
 
 // Prepare adds a new domain to the index given its size, and partition will
 // be selected automatically. It could be more efficient to use Add().
 // The added domain won't be searchable until the Index() function is called.
-func (e *LshEnsemble) Prepare(key interface{}, sig []uint64, size int) error {
+func (e *LshEnsemble) Prepare(key interface{}, sig []uint32, size int) error {
 	for i := range e.Partitions {
 		if size >= e.Partitions[i].Lower && size <= e.Partitions[i].Upper {
 			e.Add(key, sig, i)
@@ -116,13 +116,13 @@ func (e *LshEnsemble) Index() {
 // Closing channel done will cancel the query execution.
 // The query signature must be generated using the same seed as the signatures of the indexed domains,
 // and have the same number of hash functions.
-func (e *LshEnsemble) Query(sig []uint64, size int, threshold float64, done <-chan struct{}) <-chan interface{} {
+func (e *LshEnsemble) Query(sig []uint32, size int, threshold float64, done <-chan struct{}) <-chan interface{} {
 	params := e.computeParams(size, threshold)
 	return e.queryWithParam(sig, params, done)
 }
 
 // QueryTimed is similar to Query, returns the candidate domain keys in a slice as well as the running time.
-func (e *LshEnsemble) QueryTimed(sig []uint64, size int, threshold float64) (result []interface{}, dur time.Duration) {
+func (e *LshEnsemble) QueryTimed(sig []uint32, size int, threshold float64) (result []interface{}, dur time.Duration) {
 	// Compute the optimal k and l for each partition
 	params := e.computeParams(size, threshold)
 	result = make([]interface{}, 0)
@@ -136,7 +136,7 @@ func (e *LshEnsemble) QueryTimed(sig []uint64, size int, threshold float64) (res
 	return result, dur
 }
 
-func (e *LshEnsemble) queryWithParam(sig []uint64, params []param, done <-chan struct{}) <-chan interface{} {
+func (e *LshEnsemble) queryWithParam(sig []uint32, params []param, done <-chan struct{}) <-chan interface{} {
 	// Collect candidates from all partitions
 	keyChan := make(chan interface{})
 	var wg sync.WaitGroup

@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"math/rand"
-
-	minwise "github.com/dgryski/go-minhash"
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
@@ -14,7 +12,7 @@ const HashValueSize = 4
 
 // Minhash represents a MinHash object
 type Minhash struct {
-	mw *minwise.MinWise
+	mw *MinWise
 }
 
 // NewMinhash initializes a MinHash object with a seed and the number of
@@ -28,19 +26,19 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 	b.PutUint32(b2, uint32(r.Int31()))
 	fnv1 := fnv.New32a()
 	fnv2 := fnv.New32a()
-	h1 := func(b []byte) uint64 {
+	h1 := func(b []byte) uint32 {
 		fnv1.Reset()
 		fnv1.Write(b1)
 		fnv1.Write(b)
-		return uint64(fnv1.Sum32())
+		return fnv1.Sum32()
 	}
-	h2 := func(b []byte) uint64 {
+	h2 := func(b []byte) uint32 {
 		fnv2.Reset()
 		fnv2.Write(b2)
 		fnv2.Write(b)
-		return uint64(fnv2.Sum32())
+		return fnv2.Sum32()
 	}
-	return &Minhash{minwise.NewMinWise(h1, h2, numHash)}
+	return &Minhash{NewMinWise(h1, h2, numHash)}
 }
 
 // Push a new value to the MinHash object.
@@ -50,7 +48,7 @@ func (m *Minhash) Push(b []byte) {
 }
 
 // Signature exports the MinHash signature.
-func (m *Minhash) Signature() []uint64 {
+func (m *Minhash) Signature() []uint32 {
 	return m.mw.Signature()
 }
 
@@ -58,7 +56,7 @@ func (m *Minhash) Signature() []uint64 {
 // |Q \intersect X| / |Q|.
 // q and x are the signatures of Q and X respectively.
 // If either size is 0, the result is defined to be 0.
-func Containment(q, x []uint64, qSize, xSize int) float64 {
+func Containment(q, x []uint32, qSize, xSize int) float32 {
 	if qSize == 0 || xSize == 0 {
 		return 0.0
 	}
@@ -68,8 +66,8 @@ func Containment(q, x []uint64, qSize, xSize int) float64 {
 			eq++
 		}
 	}
-	jaccard := float64(eq) / float64(len(q))
-	c := (float64(xSize)/float64(qSize) + 1.0) * jaccard / (1.0 + jaccard)
+	jaccard := float32(eq) / float32(len(q))
+	c := (float32(xSize)/float32(qSize) + 1.0) * jaccard / (1.0 + jaccard)
 	if c > 1.0 {
 		return 1.0
 	}
@@ -77,7 +75,7 @@ func Containment(q, x []uint64, qSize, xSize int) float64 {
 }
 
 // SigToBytes serializes the signature into byte slice
-func SigToBytes(sig []uint64) []byte {
+func SigToBytes(sig []uint32) []byte {
 	buf := new(bytes.Buffer)
 	for _, v := range sig {
 		binary.Write(buf, binary.BigEndian, v)
@@ -86,11 +84,11 @@ func SigToBytes(sig []uint64) []byte {
 }
 
 // BytesToSig converts a byte slice into a signature
-func BytesToSig(data []byte) ([]uint64, error) {
+func BytesToSig(data []byte) ([]uint32, error) {
 	size := len(data) / HashValueSize
-	sig := make([]uint64, size)
+	sig := make([]uint32, size)
 	buf := bytes.NewReader(data)
-	var v uint64
+	var v uint32
 	for i := range sig {
 		if err := binary.Read(buf, binary.BigEndian, &v); err != nil {
 			return nil, err

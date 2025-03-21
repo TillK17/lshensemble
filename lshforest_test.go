@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func randomSignature(size int, seed int64) []uint64 {
+func randomSignature(size int, seed int64) []uint32 {
 	r := rand.New(rand.NewSource(seed))
-	sig := make([]uint64, size)
+	sig := make([]uint32, size)
 	for i := range sig {
-		sig[i] = uint64(r.Int63())
+		sig[i] = uint32(r.Int63())
 	}
 	return sig
 }

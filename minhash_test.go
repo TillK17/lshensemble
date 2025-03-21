@@ -33,8 +33,8 @@ func benchmark(minhashSize, dataSize int, t *testing.B) {
 	// Data is a set of unique values
 	d := data(dataSize)
 	// a and b are two subsets of data with some overlaps
-	a_start, a_end := 0, int(float64(dataSize)*0.65)
-	b_start, b_end := int(float64(dataSize)*0.35), dataSize
+	a_start, a_end := 0, int(float32(dataSize)*0.65)
+	b_start, b_end := int(float32(dataSize)*0.35), dataSize
 
 	m1 := NewMinhash(1, minhashSize)
 	m2 := NewMinhash(1, minhashSize)
@@ -44,8 +44,8 @@ func benchmark(minhashSize, dataSize int, t *testing.B) {
 	hashing(m2, b_start, b_end, d)
 
 	est := m1.mw.Similarity(m2.mw)
-	act := float64(a_end-b_start) / float64(b_end-a_start)
-	err := math.Abs(act - est)
+	act := float32(a_end-b_start) / float32(b_end-a_start)
+	err := math.Abs(float64(act - est))
 	fmt.Printf("Data size: %8d, ", dataSize)
 	fmt.Printf("Real resemblance: %.8f, ", act)
 	fmt.Printf("Estimated resemblance: %.8f, ", est)

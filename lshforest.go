@@ -77,7 +77,7 @@ func NewLshForest16(k, l, initSize int) *LshForest {
 	return newLshForest(k, l, 2, initSize)
 }
 
-func (f *LshForest) hashKeys(sig []uint64, K int) []string {
+func (f *LshForest) hashKeys(sig []uint32, K int) []string {
 	hs := make([]string, f.l)
 	for i := 0; i < f.l; i++ {
 		hs[i] = f.hashKeyFunc(sig[i*f.k : i*f.k+K])
@@ -87,7 +87,7 @@ func (f *LshForest) hashKeys(sig []uint64, K int) []string {
 
 // Add a key with MinHash signature into the index.
 // The key won't be searchable until Index() is called.
-func (f *LshForest) Add(key interface{}, sig []uint64) {
+func (f *LshForest) Add(key interface{}, sig []uint32) {
 	// Generate hash keys
 	hs := f.hashKeys(sig, f.k)
 	// Insert keys into the hash tables by appending.
@@ -105,7 +105,7 @@ func (f *LshForest) Index() {
 }
 
 // Query returns candidate keys given the query signature and parameters.
-func (f *LshForest) Query(sig []uint64, K, L int, out chan<- interface{}, done <-chan struct{}) {
+func (f *LshForest) Query(sig []uint32, K, L int, out chan<- interface{}, done <-chan struct{}) {
 	if K == -1 {
 		K = f.k
 	}
