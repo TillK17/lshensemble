@@ -19,8 +19,8 @@ const (
 	benchmarkSeed = 42
 	numQueries    = 100
 	minDomainSize = 10
-	minQuerySize  = 10
-	maxQuerySize  = 100
+	minQuerySize  = 100
+	maxQuerySize  = 1000
 )
 
 var (
@@ -107,7 +107,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			os.Remove(lshensembleOutput)
 		}
 		// Output results
-		accuracy_filename := fmt.Sprintf("_cod_accuracy_FNV_32_%d_small.csv", numH)
+		accuracy_filename := fmt.Sprintf("_cod_accuracy_FNV_32_%d_large.csv", numH)
 		file, err := os.Create(accuracy_filename)
 		if err != nil {
 			panic(err)
@@ -128,7 +128,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		file.Close()
 		log.Printf("Accuracy report output to %s", accuracy_filename)
 
-		performance_filename := fmt.Sprintf("_cod_performance_FNV_32_%d_small.csv", numH)
+		performance_filename := fmt.Sprintf("_cod_performance_FNV_32_%d_large.csv", numH)
 		file, err = os.Create(performance_filename)
 		if err != nil {
 			panic(err)
