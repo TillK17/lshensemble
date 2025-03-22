@@ -107,7 +107,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			os.Remove(lshensembleOutput)
 		}
 		// Output results
-		accuracy_filename := fmt.Sprintf("_cod_accuracy_FNV_64_%d_large.csv", numH)
+		accuracy_filename := fmt.Sprintf("_cod_accuracy_mm3_64_%d_large.csv", numH)
 		file, err := os.Create(accuracy_filename)
 		if err != nil {
 			panic(err)
@@ -128,7 +128,7 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		file.Close()
 		log.Printf("Accuracy report output to %s", accuracy_filename)
 
-		performance_filename := fmt.Sprintf("_cod_performance_FNV_64_%d_large.csv", numH)
+		performance_filename := fmt.Sprintf("_cod_performance_mm3_64_%d_large.csv", numH)
 		file, err = os.Create(performance_filename)
 		if err != nil {
 			panic(err)
