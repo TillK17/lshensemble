@@ -3,8 +3,10 @@ package lshensemble
 import (
 	"bytes"
 	"encoding/binary"
-	"hash/fnv"
+
 	"math/rand"
+
+	mm3 "github.com/spaolacci/murmur3"
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
@@ -24,19 +26,19 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 	b2 := make([]byte, HashValueSize)
 	b.PutUint64(b1, uint64(r.Int63()))
 	b.PutUint64(b2, uint64(r.Int63()))
-	fnv1 := fnv.New64a()
-	fnv2 := fnv.New64a()
+	mm1 := mm3.New64()
+	mm2 := mm3.New64()
 	h1 := func(b []byte) uint64 {
-		fnv1.Reset()
-		fnv1.Write(b1)
-		fnv1.Write(b)
-		return fnv1.Sum64()
+		mm1.Reset()
+		mm1.Write(b1)
+		mm1.Write(b)
+		return mm1.Sum64()
 	}
 	h2 := func(b []byte) uint64 {
-		fnv2.Reset()
-		fnv2.Write(b2)
-		fnv2.Write(b)
-		return fnv2.Sum64()
+		mm2.Reset()
+		mm2.Write(b2)
+		mm2.Write(b)
+		return mm2.Sum64()
 	}
 	return &Minhash{NewMinWise(h1, h2, numHash)}
 }

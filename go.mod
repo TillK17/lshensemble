@@ -10,4 +10,5 @@ require (
 require (
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
+	github.com/spaolacci/murmur3 v1.1.0
 )
