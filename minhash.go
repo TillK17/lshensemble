@@ -6,7 +6,7 @@ import (
 
 	"math/rand"
 
-	mm3 "github.com/spaolacci/murmur3"
+	farm "github.com/dgryski/go-farm"
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
@@ -26,19 +26,20 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 	b2 := make([]byte, HashValueSize)
 	b.PutUint32(b1, uint32(r.Int31()))
 	b.PutUint32(b2, uint32(r.Int31()))
-	mm1 := mm3.New32()
-	mm2 := mm3.New32()
+
 	h1 := func(b []byte) uint32 {
-		mm1.Reset()
-		mm1.Write(b1)
-		mm1.Write(b)
-		return mm1.Sum32()
+		combined := make([]byte, len(b1)+len(b))
+		copy(combined, b1)
+		copy(combined[len(b1):], b)
+
+		return farm.Hash32(combined)
 	}
 	h2 := func(b []byte) uint32 {
-		mm2.Reset()
-		mm2.Write(b2)
-		mm2.Write(b)
-		return mm2.Sum32()
+		combined := make([]byte, len(b2)+len(b))
+		copy(combined, b2)
+		copy(combined[len(b2):], b)
+
+		return farm.Hash32(combined)
 	}
 	return &Minhash{NewMinWise(h1, h2, numHash)}
 }
