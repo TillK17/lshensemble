@@ -212,7 +212,6 @@ func readDomains(dir string) chan rawDomain {
 type queryResult struct {
 	candidates []interface{}
 	queryKey   interface{}
-	duration   time.Duration
 }
 
 func outputQueryResults(results chan queryResult, outputFilename string) {
@@ -223,8 +222,6 @@ func outputQueryResults(results chan queryResult, outputFilename string) {
 	out := bufio.NewWriter(f)
 	for result := range results {
 		out.WriteString(result.queryKey.(string))
-		out.WriteString("\t")
-		out.WriteString(result.duration.String())
 		out.WriteString("\t")
 		for i, candidate := range result.candidates {
 			out.WriteString(candidate.(string))

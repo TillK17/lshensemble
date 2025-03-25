@@ -11,7 +11,7 @@ type DomainRecord struct {
 	// The domain size.
 	Size int
 	// The MinHash signature of this domain.
-	Signature []uint64
+	Signature []float64
 }
 
 // BySize is a wrapper for sorting domains.
