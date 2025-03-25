@@ -6,7 +6,7 @@ import (
 
 	"math/rand"
 
-	farm "github.com/dgryski/go-farm"
+	siphash "github.com/dchest/siphash"
 )
 
 // HashValueSize is 8, the number of byte used for each hash value
@@ -32,14 +32,14 @@ func NewMinhash(seed int64, numHash int) *Minhash {
 		copy(combined, b1)
 		copy(combined[len(b1):], b)
 
-		return farm.Hash64(combined)
+		return siphash.Hash(0, 0, combined)
 	}
 	h2 := func(b []byte) uint64 {
 		combined := make([]byte, len(b2)+len(b))
 		copy(combined, b2)
 		copy(combined[len(b2):], b)
 
-		return farm.Hash64(combined)
+		return siphash.Hash(0, 1, combined)
 	}
 	return &Minhash{NewMinWise(h1, h2, numHash)}
 }
