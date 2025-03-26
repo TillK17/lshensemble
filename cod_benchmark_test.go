@@ -19,13 +19,13 @@ const (
 	benchmarkSeed = 42
 	numQueries    = 1000
 	minDomainSize = 10
-	minQuerySize  = 10
-	maxQuerySize  = 100
+	minQuerySize  = 100
+	maxQuerySize  = 1000
 )
 
 var (
 	thresholds = []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
-	numHash    = []int{16, 32, 64, 128}
+	ks         = []uint64{16, 32, 64, 128}
 )
 
 // Running this function requires a `_cod_domains` directory
@@ -64,50 +64,46 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 			i++
 		}
 	}
-	if len(queries) < numQueries {
+	/*if len(queries) < numQueries {
 		msg := fmt.Sprintf("Not enough queries, found %d", len(queries))
 		panic(msg)
-	}
+	}*/
 	log.Printf("Selected %d queries", len(queries))
 	// Run benchmark
-	for _, numH := range numHash {
+	for _, k := range ks {
 		precision := []float64{}
 		recall := []float64{}
 		f1 := []float64{}
-		MinHashDomainTime := []float64{}
-		MinHashDomainSpace := []float64{}
-		MinHashQueryTime := []float64{}
-		MinHashQuerySpace := []float64{}
-		BuildIndexTime := []float64{}
-		BuildIndexSpace := []float64{}
-		QueryIndexTime := []float64{}
-		QueryIndexSpace := []float64{}
+		KMVDomainTime := []float64{}
+		KMVDomainSpace := []float64{}
+		KMVQueryTime := []float64{}
+		KMVQuerySpace := []float64{}
+		QueryTime := []float64{}
+		QuerySpace := []float64{}
 
 		for _, threshold := range thresholds {
-			log.Printf("Canadian Open Data benchmark with %d Hash permutations and threshold = %.2f", numH, threshold)
-			linearscanOutput := fmt.Sprintf("_cod_linearscan_numHash_%d_threshold_%.2f", numH, threshold)
-			lshensembleOutput := fmt.Sprintf("_cod_lshensemble_numHash_%d_threshold_%.2f", numH, threshold)
-			accuracyOutput := fmt.Sprintf("_cod_accuracy_numHash_%d_threshold_%.2f", numH, threshold)
+			log.Printf("Canadian Open Data benchmark with %d KMVs and threshold = %.2f", k, threshold)
+			linearscanOutput := fmt.Sprintf("_cod_linearscan_numHash_%d_threshold_%.2f", k, threshold)
+			lshensembleOutput := fmt.Sprintf("_cod_lshensemble_numHash_%d_threshold_%.2f", k, threshold)
+			accuracyOutput := fmt.Sprintf("_cod_accuracy_numHash_%d_threshold_%.2f", k, threshold)
 			benchmarkLinearscan(rawDomains, queries, threshold, linearscanOutput)
-			t, s := benchmarkLshEnsemble(rawDomains, queries, threshold, numH, lshensembleOutput)
+			t, s := benchmarkKMV(rawDomains, queries, threshold, k, lshensembleOutput)
 			p, r, f := benchmarkAccuracy(linearscanOutput, lshensembleOutput, accuracyOutput)
 			precision = append(precision, p)
 			recall = append(recall, r)
 			f1 = append(f1, f)
-			MinHashDomainTime = append(MinHashDomainTime, t[0])
-			MinHashDomainSpace = append(MinHashDomainSpace, s[0])
-			MinHashQueryTime = append(MinHashQueryTime, t[1])
-			MinHashQuerySpace = append(MinHashQuerySpace, s[1])
-			BuildIndexTime = append(BuildIndexTime, t[2])
-			BuildIndexSpace = append(BuildIndexSpace, s[2])
-			QueryIndexTime = append(QueryIndexTime, t[3])
-			QueryIndexSpace = append(QueryIndexSpace, s[3])
+			KMVDomainTime = append(KMVDomainTime, t[0])
+			KMVDomainSpace = append(KMVDomainSpace, s[0])
+			KMVQueryTime = append(KMVQueryTime, t[1])
+			KMVQuerySpace = append(KMVQuerySpace, s[1])
+			QueryTime = append(QueryTime, t[2])
+			QuerySpace = append(QuerySpace, s[2])
 			runtime.GC()
 			os.Remove(linearscanOutput)
 			os.Remove(lshensembleOutput)
 		}
 		// Output results
-		accuracy_filename := fmt.Sprintf("_cod_accuracy_siphash_64_%d_small.csv", numH)
+		accuracy_filename := fmt.Sprintf("_cod_accuracy_FNV_128_%d_large.csv", k)
 		file, err := os.Create(accuracy_filename)
 		if err != nil {
 			panic(err)
@@ -128,25 +124,23 @@ func Benchmark_CanadianOpenData(b *testing.B) {
 		file.Close()
 		log.Printf("Accuracy report output to %s", accuracy_filename)
 
-		performance_filename := fmt.Sprintf("_cod_performance_siphash_64_%d_small.csv", numH)
+		performance_filename := fmt.Sprintf("_cod_performance_FNV_128_%d_large.csv", k)
 		file, err = os.Create(performance_filename)
 		if err != nil {
 			panic(err)
 		}
 		out = csv.NewWriter(file)
-		out.Write([]string{"MinHashDomain", "MinHashQuery", "LSHBuild", "LSHQuery"})
+		out.Write([]string{"KMVDomain", "KMVQuery", "Query"})
 		line := []string{
-			strconv.FormatFloat(mean(MinHashDomainTime), 'f', 4, 64),
-			strconv.FormatFloat(mean(MinHashQueryTime), 'f', 4, 64),
-			strconv.FormatFloat(mean(BuildIndexTime), 'f', 4, 64),
-			strconv.FormatFloat(mean(QueryIndexTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(KMVDomainTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(KMVQueryTime), 'f', 4, 64),
+			strconv.FormatFloat(mean(QueryTime), 'f', 4, 64),
 		}
 		out.Write(line)
 		line = []string{
-			strconv.FormatFloat(mean(MinHashDomainSpace), 'f', 4, 64),
-			strconv.FormatFloat(mean(MinHashQuerySpace), 'f', 4, 64),
-			strconv.FormatFloat(mean(BuildIndexSpace), 'f', 4, 64),
-			strconv.FormatFloat(mean(QueryIndexSpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(KMVDomainSpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(KMVQuerySpace), 'f', 4, 64),
+			strconv.FormatFloat(mean(QuerySpace), 'f', 4, 64),
 		}
 		out.Write(line)
 		out.Flush()
@@ -212,6 +206,7 @@ func readDomains(dir string) chan rawDomain {
 type queryResult struct {
 	candidates []interface{}
 	queryKey   interface{}
+	duration   time.Duration
 }
 
 func outputQueryResults(results chan queryResult, outputFilename string) {
@@ -223,6 +218,8 @@ func outputQueryResults(results chan queryResult, outputFilename string) {
 	for result := range results {
 		out.WriteString(result.queryKey.(string))
 		out.WriteString("\t")
+		//out.WriteString(result.duration.String())
+		//out.WriteString("\t")
 		for i, candidate := range result.candidates {
 			out.WriteString(candidate.(string))
 			if i < len(result.candidates)-1 {

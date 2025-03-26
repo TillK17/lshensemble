@@ -4,12 +4,13 @@ import (
 	"hash/fnv"
 	"log"
 	"math"
+	"runtime"
 	"sort"
 	"time"
 )
 
 func benchmarkKMV(rawDomains []rawDomain, rawQueries []rawDomain,
-	k uint64, threshold float64, outputFilename string) ([]float64, []float64) {
+	threshold float64, k uint64, outputFilename string) ([]float64, []float64) {
 	// KMV domains
 	mem := readMemStats()
 	start := time.Now()
@@ -35,21 +36,32 @@ func benchmarkKMV(rawDomains []rawDomain, rawQueries []rawDomain,
 	start = time.Now()
 
 	for _, query := range queries {
-		candidates := []string{}
+		candidates := make([]interface{}, 0)
+		start := time.Now()
 		for _, domain := range domainRecords {
 			// Compare the query with the domain
 			u := union(domain.Signature, query.Signature)
 			i := intersectinSize(domain.Signature, query.Signature)
 			est := (i * float64(k-1)) / (float64(k) * u[k-1])
 			if est >= threshold {
-				candidates = append(candidates, domain.Key.(string))
+				candidates = append(candidates, domain.Key)
 			}
 		}
+		duration := time.Now().Sub(start)
 		results <- queryResult{
 			queryKey:   query.Key,
+			duration:   duration,
 			candidates: candidates,
 		}
 	}
+	close(results)
+	QueryTime := time.Now().Unix() - start.Unix()
+	QuerySpace := readMemStats() - mem
+	log.Printf("Finished comparing queries")
+
+	outputQueryResults(results, outputFilename)
+	log.Printf("Finished comparing queries, output %s", outputFilename)
+	return []float64{float64(KMVDomainTime), float64(KMVQueryTime), float64(QueryTime)}, []float64{float64(KMVDomainSpace), float64(KMVQuerySpace), float64(QuerySpace)}
 }
 
 func KMVDomains(rawDomains []rawDomain, k uint64) []*DomainRecord {
@@ -117,4 +129,10 @@ func union(domain []float64, query []float64) []float64 {
 		unionSlice = append(unionSlice, v)
 	}
 	return unionSlice
+}
+
+func readMemStats() uint64 {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return m.TotalAlloc
 }
